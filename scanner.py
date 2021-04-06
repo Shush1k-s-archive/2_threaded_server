@@ -2,11 +2,16 @@ import time
 from threading import Thread
 import socket
 from bar import ProgressBar
+from validation import ip_validation, port_validation
+
+DEFAULT_SERVER = "localhost"
+DEFAULT_START_PORT = 1
+DEFAULT_END_PORT = 19999
 
 
 class PortScanner(Thread):
 
-    def __init__(self, start_port: int = 1, end_port: int = 65535, host: str = "localhost"):
+    def __init__(self, start_port: int = 1, end_port: int = 65535, host: str = DEFAULT_SERVER):
         """
         Порт сканер
         """
@@ -24,7 +29,7 @@ class PortScanner(Thread):
     def run(self) -> None:
         """
         Старт потоков прогресс бара и сканера
-        :return:
+        :return: None
         """
 
         progress_bar = Thread(target=self.update_bar)
@@ -49,7 +54,7 @@ class PortScanner(Thread):
     def update_bar(self) -> None:
         """
         Обновляет состояние progress_bar
-        :return:
+        :return: None
         """
 
         while self.progress < self.count:
@@ -57,6 +62,7 @@ class PortScanner(Thread):
             self.progress_bar.calculate(self.progress)
 
         # Сортировка по портам
+        print()
         for key, value in sorted(self.port_status.items(), key=lambda x: x[0]):
             if value is True:
                 print(f"Порт {key} открыт")
@@ -65,7 +71,7 @@ class PortScanner(Thread):
         """
         Проверяем открыт ли порт
         :param port: порт
-        :return:
+        :return: None
         """
 
         try:
@@ -85,11 +91,28 @@ class PortScanner(Thread):
             self.port_status[port] = True
         except OSError:
             self.port_status[port] = False
-
-        sock.close()
-        self.progress += 1
+        finally:
+            sock.close()
+            self.progress += 1
 
 
 if __name__ == '__main__':
-    port_scanner = PortScanner(start_port=5000, end_port=19999)
+
+    host_ = input("Введите ip сервера (enter для значения по умолчанию): ")
+    if not ip_validation(host_):
+        host_ = DEFAULT_SERVER
+        print(f"Установили ip-адресс {host_} по умолчанию")
+
+    start_port_ = input("Введите от какого порта сканим: ")
+    if not port_validation(start_port_):
+        start_port_ = DEFAULT_START_PORT
+        print(f"Установили порт {start_port_} по умолчанию")
+
+    end_port_ = input("Введите до какого порта сканим: ")
+    if not port_validation(end_port_):
+        end_port_ = DEFAULT_END_PORT
+        print(f"Установили порт {end_port_} по умолчанию")
+
+    print(f"\nДиапазон портов: от {start_port_} до {end_port_}")
+    port_scanner = PortScanner(host=host_, start_port=int(start_port_), end_port=int(end_port_))
     port_scanner.start()

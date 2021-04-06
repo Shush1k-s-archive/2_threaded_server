@@ -34,7 +34,7 @@ class ProgressBar:
 
         percent = f"{100 * one_percent:.1f}"
 
-        progress_bar = f"{self.bar_name}: {current_value}/{self.steps} " f"{progress}| {percent}%"
+        progress_bar = f"{self.bar_name}: {current_value}/{self.steps} |{progress}| {percent}%"
 
         print(progress_bar, end='\r')
 
