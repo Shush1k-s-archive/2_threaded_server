@@ -120,7 +120,21 @@ class Server():
             conn (socket): сокет с данными клиента
             address (tuple): кортеж ip-адреса и номера соединения
         """
-        self.authorization(address, conn)
+        try:
+            self.authorization(address, conn)
+        except EOFError:
+            # KeyboardInterrupt
+            conn.close()
+            self.clients.remove(conn)
+            logging.info(f"Отключение клиента {address}")
+            return
+        except ConnectionResetError:
+            # anti_scanner
+            conn.close()
+            self.clients.remove(conn)
+            logging.info(f"Отключение клиента {address}")
+            return
+
         while True:
             try:
                 data = conn.recv(1024)
